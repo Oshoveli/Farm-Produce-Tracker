@@ -396,3 +396,121 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* Fix Footer Position */
+html, body {
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.main-content {
+    flex: 1;
+}
+
+/* Fix Dashboard and Pages Layout */
+.dashboard, .page-content {
+    margin-top: 70px;
+    padding: 40px 20px;
+    flex: 1;
+}
+
+/* Fix Form Container Position */
+.form-container {
+    max-width: 400px;
+    margin: 150px auto 50px;
+    padding: 40px;
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.status-planted, status-healthy, status-paid {
+    background: #e8f5e8;
+    color: #2d8a5f;
+}
+
+.status-growing, status-vaccinated {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-ready, status-sick {
+    background: #ffe6e6;
+    color: #dc3545;
+}
+
+.status-harvested, status-quarantined, status-pending {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.status-overdue {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Small Buttons */
+.btn-small {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    margin: 2px;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+/* Fix Table Responsiveness */
+.data-table {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+    margin-bottom: 30px;
+}
+
+.data-table h3 {
+    padding: 20px 20px 10px;
+    margin: 0;
+    color: var(--text-dark);
+}
+
+/* Edit Form Styles */
+.edit-form {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    margin: 10px 0;
+    border-left: 4px solid var(--primary-color);
+}
+
+/* Ensure Footer Stays at Bottom */
+.footer {
+    background: var(--text-dark);
+    color: var(--white);
+    text-align: center;
+    padding: 30px 20px;
+    margin-top: auto;
+}
