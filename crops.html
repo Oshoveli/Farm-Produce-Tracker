@@ -24,7 +24,7 @@
         </div>
     </nav>
 
-    <div class="dashboard">
+    <div class="page-content">
         <div class="container">
             <div class="dashboard-header">
                 <h1>Crop Management</h1>
@@ -33,7 +33,7 @@
             </div>
 
             <!-- Add Crop Form -->
-            <div id="addCropForm" class="form-container" style="display: none; margin-top: 20px;">
+            <div id="addCropForm" class="form-container" style="display: none; margin: 20px auto;">
                 <h3>Add New Crop</h3>
                 <form id="cropForm">
                     <div class="form-group">
@@ -77,6 +77,9 @@
                     </div>
                 </form>
             </div>
+
+            <!-- Edit Crop Form (will be inserted by JavaScript) -->
+            <div id="editCropContainer"></div>
 
             <!-- Crops Table -->
             <div class="data-table">
