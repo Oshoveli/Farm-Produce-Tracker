@@ -3,24 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farm Produce Tracker - Reports</title>
+    <title>Reports & Analytics - Farm Produce Tracker</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <nav>
-        <ul>
-            <li><a href="dashboard.html">Dashboard</a></li>
-            <li><a href="reports.html">Reports</a></li>
-        </ul>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAzMCAzMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE1IDI3LjVDMjEuOTAzNiAyNy41IDI3LjUgMjEuOTAzNiAyNy41IDE1QzI3LjUgOC4wOTY0NCAyMS45MDM2IDIuNSAxNSAyLjVDOC4wOTY0NCAyLjUgMi41IDguMDk2NDQgMi41IDE1QzIuNSAyMS45MDM2IDguMDk2NDQgMjcuNSAxNSAyNy41WiIgc3Ryb2tlPSIjM2NhMzc1IiBzdHJva2Utd2lkdGg9IjIiLz4KPHBhdGggZD0iTTEwIDEySDE5TTEwIDE3SDE2TTEwIDIySDE0IiBzdHJva2U9IiMzY2EzNzUiIHN0cm9rZS13aWR0aD0iIi8+Cjwvc3ZnPgo=" alt="Farm Logo">
+                <span>FarmTracker</span>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+                <li class="nav-item"><a href="crops.html" class="nav-link">Crops</a></li>
+                <li class="nav-item"><a href="livestock.html" class="nav-link">Livestock</a></li>
+                <li class="nav-item"><a href="sales.html" class="nav-link">Sales</a></li>
+                <li class="nav-item"><a href="reports.html" class="nav-link active">Reports</a></li>
+                <li class="nav-item"><a href="index.html" class="nav-link">Logout</a></li>
+            </ul>
+        </div>
     </nav>
 
-    <main>
-        <h1>Reports</h1>
-        <p>View inventory, harvest, and sales reports here.</p>
-    </main>
+    <div class="page-content">
+        <div class="container">
+            <div class="dashboard-header">
+                <h1>Farm Reports & Analytics</h1>
+                <p>Comprehensive insights into your farm's performance</p>
+            </div>
 
-    <footer>
-        <p>&copy; 2025 Farm Produce Tracker. All rights reserved.</p>
+            <!-- Summary Cards -->
+            <div class="dashboard-cards">
+                <div class="dashboard-card">
+                    <h3>Total Inventory Value</h3>
+                    <div class="value" id="totalInventoryValue">N$ 0</div>
+                    <p>Current stock worth</p>
+                </div>
+                <div class="dashboard-card">
+                    <h3>Monthly Revenue</h3>
+                    <div class="value" id="monthlyRevenue">N$ 0</div>
+                    <p>This month's income</p>
+                </div>
+                <div class="dashboard-card">
+                    <h3>Active Crops</h3>
+                    <div class="value" id="activeCropsCount">0</div>
+                    <p>Different crop types</p>
+                </div>
+                <div class="dashboard-card">
+                    <h3>Total Animals</h3>
+                    <div class="value" id="totalAnimalsCount">0</div>
+                    <p>Livestock count</p>
+                </div>
+            </div>
+
+            <!-- Reports Grid -->
+            <div class="features-grid" style="margin: 40px 0;">
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>Sales Trends</h3>
+                    <p>View your sales performance over time and identify patterns</p>
+                    <button class="btn btn-primary" onclick="generateSalesReport()">Generate Report</button>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌾</div>
+                    <h3>Crop Analytics</h3>
+                    <p>Analyze crop yields, planting cycles, and harvest data</p>
+                    <button class="btn btn-primary" onclick="generateCropReport()">Generate Report</button>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🐄</div>
+                    <h3>Livestock Reports</h3>
+                    <p>Track animal health, growth, and production metrics</p>
+                    <button class="btn btn-primary" onclick="generateLivestockReport()">Generate Report</button>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h3>Financial Summary</h3>
+                    <p>Comprehensive financial overview and profit analysis</p>
+                    <button class="btn btn-primary" onclick="generateFinancialReport()">Generate Report</button>
+                </div>
+            </div>
+
+            <!-- Recent Reports -->
+            <div class="data-table">
+                <h3>Recent Reports</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Report Type</th>
+                            <th>Generated Date</th>
+                            <th>Time Period</th>
+                            <th>Summary</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportsTable">
+                        <tr>
+                            <td>Monthly Sales Summary</td>
+                            <td>March 15, 2025</td>
+                            <td>March 2025</td>
+                            <td>Total sales: N$ 8,500 | Top product: Maize</td>
+                            <td><button class="btn-small">View</button> <button class="btn-small">Download</button></td>
+                        </tr>
+                        <tr>
+                            <td>Crop Inventory</td>
+                            <td>March 10, 2025</td>
+                            <td>Q1 2025</td>
+                            <td>3 active crops | 800kg total inventory</td>
+                            <td><button class="btn-small">View</button> <button class="btn-small">Download</button></td>
+                        </tr>
+                        <tr>
+                            <td>Livestock Health</td>
+                            <td>March 5, 2025</td>
+                            <td>February 2025</td>
+                            <td>75 animals | 92% healthy</td>
+                            <td><button class="btn-small">View</button> <button class="btn-small">Download</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="data-table">
+                <h3>Quick Statistics</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>This Month</th>
+                            <th>Last Month</th>
+                            <th>Change</th>
+                        </tr>
+                    </thead>
+                    <tbody id="statsTable">
+                        <!-- Stats will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Farm Produce Tracker. Empowering Namibian Farmers.</p>
+        </div>
     </footer>
+
+    <script src="js/scripts.js"></script>
 </body>
 </html>
