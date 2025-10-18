@@ -302,17 +302,45 @@ function loadActivityTable() {
     
     table.innerHTML = '';
     
-    const recentActivities = farmData.activities.slice(-5).reverse();
+    // Filter out system messages and get only user activities
+    const userActivities = farmData.activities.filter(activity => activity.type !== 'system');
+    const recentActivities = userActivities.slice(-5).reverse();
+    
+    if (recentActivities.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td colspan="3" style="text-align: center; color: var(--text-light);">
+                No recent activity. Start adding crops, livestock, or sales to see activity here.
+            </td>
+        `;
+        table.appendChild(row);
+        return;
+    }
     
     recentActivities.forEach(activity => {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${formatDate(activity.date)}</td>
-            <td>${activity.type}</td>
+            <td>${formatActivityType(activity.type)}</td>
             <td>${activity.details}</td>
         `;
         table.appendChild(row);
     });
+}
+
+function formatActivityType(type) {
+    const typeMap = {
+        'crop_added': 'Crop Added',
+        'crop_updated': 'Crop Updated',
+        'crop_deleted': 'Crop Deleted',
+        'livestock_added': 'Livestock Added',
+        'livestock_updated': 'Livestock Updated',
+        'livestock_deleted': 'Livestock Deleted',
+        'sale_recorded': 'Sale Recorded',
+        'sale_deleted': 'Sale Deleted',
+        'report_generated': 'Report Generated'
+    };
+    return typeMap[type] || type;
 }
 
 // Crop management functions
@@ -367,6 +395,17 @@ function loadCropsTable() {
     
     table.innerHTML = '';
     
+    if (farmData.crops.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td colspan="7" style="text-align: center; color: var(--text-light);">
+                No crops added yet. Click "Add New Crop" to get started.
+            </td>
+        `;
+        table.appendChild(row);
+        return;
+    }
+    
     farmData.crops.forEach(crop => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -387,14 +426,19 @@ function loadCropsTable() {
 
 function deleteCrop(id) {
     if (confirm('Are you sure you want to delete this crop?')) {
+        const crop = farmData.crops.find(c => c.id === id);
         farmData.crops = farmData.crops.filter(crop => crop.id !== id);
         saveToLocalStorage('crops', farmData.crops);
+        
+        // Add activity
+        addActivity('crop_deleted', `Deleted ${crop.name} from crops`);
+        
+        showSuccess('Crop deleted successfully!');
         loadCropsTable();
+        // Update dashboard if we're on dashboard page
         if (document.getElementById('totalCrops')) {
             updateDashboard();
         }
-        addActivity('crop_deleted', 'Removed a crop from tracking');
-        showSuccess('Crop deleted successfully!');
     }
 }
 
@@ -467,6 +511,8 @@ function handleEditCrop(e, id) {
     const cropIndex = farmData.crops.findIndex(c => c.id === id);
     if (cropIndex === -1) return;
 
+    const oldCropName = farmData.crops[cropIndex].name;
+    
     farmData.crops[cropIndex] = {
         ...farmData.crops[cropIndex],
         name: document.getElementById('editCropName').value,
@@ -478,7 +524,7 @@ function handleEditCrop(e, id) {
     };
 
     saveToLocalStorage('crops', farmData.crops);
-    addActivity('crop_updated', `Updated ${farmData.crops[cropIndex].name} details`);
+    addActivity('crop_updated', `Updated ${oldCropName} to ${farmData.crops[cropIndex].name}`);
     
     showSuccess('Crop updated successfully!');
     cancelEditCrop();
@@ -546,6 +592,17 @@ function loadLivestockTable() {
     
     table.innerHTML = '';
     
+    if (farmData.livestock.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td colspan="7" style="text-align: center; color: var(--text-light);">
+                No livestock added yet. Click "Add New Livestock" to get started.
+            </td>
+        `;
+        table.appendChild(row);
+        return;
+    }
+    
     farmData.livestock.forEach(animal => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -566,14 +623,19 @@ function loadLivestockTable() {
 
 function deleteLivestock(id) {
     if (confirm('Are you sure you want to delete this livestock record?')) {
+        const animal = farmData.livestock.find(a => a.id === id);
         farmData.livestock = farmData.livestock.filter(animal => animal.id !== id);
         saveToLocalStorage('livestock', farmData.livestock);
+        
+        // Add activity
+        addActivity('livestock_deleted', `Deleted ${animal.quantity} ${animal.type}(s)`);
+        
+        showSuccess('Livestock record deleted successfully!');
         loadLivestockTable();
+        // Update dashboard if we're on dashboard page
         if (document.getElementById('totalLivestock')) {
             updateDashboard();
         }
-        addActivity('livestock_deleted', 'Removed livestock from tracking');
-        showSuccess('Livestock record deleted successfully!');
     }
 }
 
@@ -646,6 +708,8 @@ function handleEditLivestock(e, id) {
     const animalIndex = farmData.livestock.findIndex(a => a.id === id);
     if (animalIndex === -1) return;
 
+    const oldAnimalType = farmData.livestock[animalIndex].type;
+    
     farmData.livestock[animalIndex] = {
         ...farmData.livestock[animalIndex],
         type: document.getElementById('editAnimalType').value,
@@ -657,7 +721,7 @@ function handleEditLivestock(e, id) {
     };
 
     saveToLocalStorage('livestock', farmData.livestock);
-    addActivity('livestock_updated', `Updated ${farmData.livestock[animalIndex].type} details`);
+    addActivity('livestock_updated', `Updated ${oldAnimalType} to ${farmData.livestock[animalIndex].type}`);
     
     showSuccess('Livestock updated successfully!');
     cancelEditLivestock();
@@ -731,6 +795,17 @@ function loadSalesTable() {
     
     table.innerHTML = '';
     
+    if (farmData.sales.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td colspan="9" style="text-align: center; color: var(--text-light);">
+                No sales recorded yet. Click "Record New Sale" to get started.
+            </td>
+        `;
+        table.appendChild(row);
+        return;
+    }
+    
     farmData.sales.forEach(sale => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -752,15 +827,20 @@ function loadSalesTable() {
 
 function deleteSale(id) {
     if (confirm('Are you sure you want to delete this sale record?')) {
+        const sale = farmData.sales.find(s => s.id === id);
         farmData.sales = farmData.sales.filter(sale => sale.id !== id);
         saveToLocalStorage('sales', farmData.sales);
+        
+        // Add activity
+        addActivity('sale_deleted', `Deleted sale of ${sale.quantity} ${sale.itemName} to ${sale.buyer}`);
+        
+        showSuccess('Sale record deleted successfully!');
         loadSalesTable();
         updateSalesSummary();
+        // Update dashboard if we're on dashboard page
         if (document.getElementById('monthlySales')) {
             updateDashboard();
         }
-        addActivity('sale_deleted', 'Removed a sale record');
-        showSuccess('Sale record deleted successfully!');
     }
 }
 
@@ -815,23 +895,164 @@ function updateItemNames() {
 
 // Reports Page Functions
 function generateSalesReport() {
-    showSuccess('Sales report generated! This would download a PDF in a real application.');
+    // Create a simple report
+    const totalSales = farmData.sales.reduce((sum, sale) => sum + parseFloat(sale.amount), 0);
+    const totalCrops = farmData.crops.length;
+    const totalLivestock = farmData.livestock.reduce((sum, animal) => sum + parseInt(animal.quantity), 0);
+    
+    const reportContent = `
+        FARM PRODUCE TRACKER - SALES REPORT
+        Generated on: ${new Date().toLocaleDateString()}
+        
+        SUMMARY:
+        - Total Sales: N$ ${totalSales.toFixed(2)}
+        - Active Crops: ${totalCrops}
+        - Total Livestock: ${totalLivestock}
+        - Monthly Revenue: N$ ${farmData.sales
+            .filter(sale => new Date(sale.date).getMonth() === new Date().getMonth())
+            .reduce((sum, sale) => sum + parseFloat(sale.amount), 0).toFixed(2)}
+        
+        RECENT SALES:
+        ${farmData.sales.slice(-5).map(sale => 
+            `- ${sale.itemName}: ${sale.quantity} sold for N$ ${sale.amount} to ${sale.buyer}`
+        ).join('\n')}
+    `;
+    
+    // In a real app, this would generate a PDF or download a file
+    // For now, we'll show it in an alert and create a downloadable text file
+    const blob = new Blob([reportContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sales-report-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
     addActivity('report_generated', 'Generated sales trends report');
+    showSuccess('Sales report generated and downloaded!');
 }
 
 function generateCropReport() {
-    showSuccess('Crop analytics report generated!');
+    const cropReport = `
+        FARM PRODUCE TRACKER - CROP ANALYTICS REPORT
+        Generated on: ${new Date().toLocaleDateString()}
+        
+        CROP SUMMARY:
+        Total Crops: ${farmData.crops.length}
+        
+        CROP DETAILS:
+        ${farmData.crops.map(crop => 
+            `- ${crop.name} (${crop.type}): ${crop.quantity}kg, Status: ${crop.status}, Planted: ${formatDate(crop.plantingDate)}`
+        ).join('\n')}
+        
+        STATUS BREAKDOWN:
+        - Planted: ${farmData.crops.filter(c => c.status === 'planted').length}
+        - Growing: ${farmData.crops.filter(c => c.status === 'growing').length}
+        - Ready: ${farmData.crops.filter(c => c.status === 'ready').length}
+        - Harvested: ${farmData.crops.filter(c => c.status === 'harvested').length}
+    `;
+    
+    const blob = new Blob([cropReport], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `crop-report-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
     addActivity('report_generated', 'Generated crop analytics report');
+    showSuccess('Crop analytics report generated and downloaded!');
 }
 
 function generateLivestockReport() {
-    showSuccess('Livestock report generated!');
+    const totalAnimals = farmData.livestock.reduce((sum, animal) => sum + parseInt(animal.quantity), 0);
+    
+    const livestockReport = `
+        FARM PRODUCE TRACKER - LIVESTOCK REPORT
+        Generated on: ${new Date().toLocaleDateString()}
+        
+        LIVESTOCK SUMMARY:
+        Total Animals: ${totalAnimals}
+        Animal Types: ${farmData.livestock.length}
+        
+        ANIMAL DETAILS:
+        ${farmData.livestock.map(animal => 
+            `- ${animal.type} (${animal.breed || 'Unknown breed'}): ${animal.quantity} animals, Health: ${animal.healthStatus}`
+        ).join('\n')}
+        
+        HEALTH STATUS:
+        - Healthy: ${farmData.livestock.filter(a => a.healthStatus === 'healthy').length} types
+        - Vaccinated: ${farmData.livestock.filter(a => a.healthStatus === 'vaccinated').length} types
+        - Sick: ${farmData.livestock.filter(a => a.healthStatus === 'sick').length} types
+        - Quarantined: ${farmData.livestock.filter(a => a.healthStatus === 'quarantined').length} types
+    `;
+    
+    const blob = new Blob([livestockReport], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `livestock-report-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
     addActivity('report_generated', 'Generated livestock health report');
+    showSuccess('Livestock report generated and downloaded!');
 }
 
 function generateFinancialReport() {
-    showSuccess('Financial summary generated!');
+    const totalSales = farmData.sales.reduce((sum, sale) => sum + parseFloat(sale.amount), 0);
+    const currentMonthSales = farmData.sales
+        .filter(sale => new Date(sale.date).getMonth() === new Date().getMonth())
+        .reduce((sum, sale) => sum + parseFloat(sale.amount), 0);
+    const pendingPayments = farmData.sales
+        .filter(sale => sale.paymentStatus === 'pending')
+        .reduce((sum, sale) => sum + parseFloat(sale.amount), 0);
+    
+    const financialReport = `
+        FARM PRODUCE TRACKER - FINANCIAL SUMMARY
+        Generated on: ${new Date().toLocaleDateString()}
+        
+        FINANCIAL OVERVIEW:
+        - Total Revenue: N$ ${totalSales.toFixed(2)}
+        - This Month: N$ ${currentMonthSales.toFixed(2)}
+        - Pending Payments: N$ ${pendingPayments.toFixed(2)}
+        
+        INVENTORY VALUE:
+        - Crop Inventory: N$ ${farmData.crops.reduce((sum, crop) => sum + (parseFloat(crop.quantity) * 10), 0).toFixed(2)}
+        - Livestock Inventory: N$ ${farmData.livestock.reduce((sum, animal) => sum + (parseInt(animal.quantity) * 100), 0).toFixed(2)}
+        - Total Inventory Value: N$ ${(farmData.crops.reduce((sum, crop) => sum + (parseFloat(crop.quantity) * 10), 0) + farmData.livestock.reduce((sum, animal) => sum + (parseInt(animal.quantity) * 100), 0)).toFixed(2)}
+        
+        TOP BUYERS:
+        ${Object.entries(
+            farmData.sales.reduce((acc, sale) => {
+                acc[sale.buyer] = (acc[sale.buyer] || 0) + parseFloat(sale.amount);
+                return acc;
+            }, {})
+        )
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([buyer, amount]) => `- ${buyer}: N$ ${amount.toFixed(2)}`)
+        .join('\n')}
+    `;
+    
+    const blob = new Blob([financialReport], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `financial-report-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
     addActivity('report_generated', 'Generated financial summary report');
+    showSuccess('Financial summary generated and downloaded!');
 }
 
 // Update reports page statistics
@@ -921,7 +1142,7 @@ function addActivity(type, details) {
     saveToLocalStorage('activities', farmData.activities);
 }
 
-// Add some sample data for demonstration
+// Add some sample data for demonstration (without system messages)
 function addSampleData() {
     if (farmData.crops.length === 0) {
         farmData.crops = [
@@ -945,6 +1166,10 @@ function addSampleData() {
             }
         ];
         saveToLocalStorage('crops', farmData.crops);
+        
+        // Add activities for sample data
+        addActivity('crop_added', 'Added 500kg of Maize');
+        addActivity('crop_added', 'Added 300kg of Mahangu');
     }
     
     if (farmData.livestock.length === 0) {
@@ -969,6 +1194,10 @@ function addSampleData() {
             }
         ];
         saveToLocalStorage('livestock', farmData.livestock);
+        
+        // Add activities for sample data
+        addActivity('livestock_added', 'Added 25 Cattle(s)');
+        addActivity('livestock_added', 'Added 50 Goat(s)');
     }
     
     if (farmData.sales.length === 0) {
@@ -986,17 +1215,14 @@ function addSampleData() {
             }
         ];
         saveToLocalStorage('sales', farmData.sales);
+        
+        // Add activities for sample data
+        addActivity('sale_recorded', 'Sold 100 crop for N$ 850');
     }
     
+    // Don't add system messages to activities
     if (farmData.activities.length === 0) {
-        farmData.activities = [
-            {
-                date: new Date().toISOString(),
-                type: 'system',
-                details: 'FarmTracker initialized with sample data'
-            }
-        ];
-        saveToLocalStorage('activities', farmData.activities);
+        // Just ensure we have some initial activities from the sample data above
     }
 }
 
