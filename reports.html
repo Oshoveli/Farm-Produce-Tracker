@@ -122,15 +122,6 @@
             padding: 6px 12px;
             font-size: 0.8rem;
         }
-
-        .farmbot-tip {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 8px;
-            padding: 10px 15px;
-            margin: 10px 0;
-            font-size: 0.9rem;
-        }
     </style>
 </head>
 <body>
@@ -164,23 +155,30 @@
                     <div class="farmbot-icon">🤖</div>
                     <div>
                         <h3>FarmBot AI Assistant</h3>
-                        <p>Get personalized farming advice and financial insights based on your data!</p>
+                        <p>Get personalized farming advice based on your data</p>
                     </div>
                 </div>
                 <div class="farmbot-chat" id="farmbotChat">
                     <div class="farmbot-message bot">
-                        👋 Hello! I'm FarmBot, your AI farming advisor. I can analyze your farm data and provide personalized advice on:\n\n💰 **Financial Performance** - Profit/loss analysis, revenue optimization\n🌱 **Crop Management** - Yield improvements, planting strategies\n🐄 **Livestock Health** - Animal care, breeding recommendations\n📈 **Business Growth** - Sales strategies, market opportunities\n\nWhat would you like to improve on your farm today?
+                        Hello! I'm FarmBot, your farming assistant. I can help you with:
+
+Financial Performance - Profit analysis and revenue tips
+Crop Management - Yield improvements and planting advice  
+Livestock Health - Animal care and breeding tips
+Business Growth - Sales strategies and market opportunities
+
+What would you like to improve on your farm today?
                     </div>
                 </div>
                 <div class="farmbot-input">
-                    <input type="text" id="farmbotInput" placeholder="Ask about profits, crop yields, livestock health, or business advice..." onkeypress="handleFarmBotKeypress(event)">
+                    <input type="text" id="farmbotInput" placeholder="Ask about profits, crops, livestock, or business advice..." onkeypress="handleFarmBotKeypress(event)">
                     <button onclick="sendFarmBotMessage()">Send</button>
                 </div>
                 <div class="farmbot-suggestions">
-                    <div class="farmbot-suggestion" onclick="askFarmBot('Am I making profit or loss? How can I improve?')">💰 Profit Analysis</div>
-                    <div class="farmbot-suggestion" onclick="askFarmBot('Which crops are most profitable?')">🌱 Crop Advice</div>
-                    <div class="farmbot-suggestion" onclick="askFarmBot('How can I increase my livestock value?')">🐄 Livestock Tips</div>
-                    <div class="farmbot-suggestion" onclick="askFarmBot('What should I focus on to grow my farm business?')">📈 Growth Strategy</div>
+                    <div class="farmbot-suggestion" onclick="askFarmBot('Am I making profit or loss? How can I improve?')">Profit Analysis</div>
+                    <div class="farmbot-suggestion" onclick="askFarmBot('Which crops are most profitable?')">Crop Advice</div>
+                    <div class="farmbot-suggestion" onclick="askFarmBot('How can I increase my livestock value?')">Livestock Tips</div>
+                    <div class="farmbot-suggestion" onclick="askFarmBot('What should I focus on to grow my farm?')">Growth Strategy</div>
                 </div>
             </div>
 
@@ -406,156 +404,128 @@
             }
 
             // Help and capabilities
-            if (lowerMessage.includes('help') || lowerMessage.includes('what can you do') || 
-                lowerMessage.includes('capabilities')) {
-                
-                return `I'm FarmBot! Here's how I can help you:\n\n💰 **FINANCIAL ANALYSIS**\n- Profit/loss assessment\n- Revenue optimization tips\n- Cost management advice\n\n🌱 **CROP MANAGEMENT**\n- Most profitable crop identification\n- Yield improvement strategies\n- Planting season advice\n\n🐄 **LIVESTOCK OPTIMIZATION**\n- Animal value maximization\n- Health management tips\n- Breeding recommendations\n\n📈 **BUSINESS GROWTH**\n- Expansion opportunities\n- Market strategy advice\n- Resource allocation tips\n\n💡 **SALES & MARKETING**\n- Buyer relationship management\n- Pricing strategies\n- Sales channel optimization\n\nWhat specific area would you like to improve?`;
+            if (lowerMessage.includes('help') || lowerMessage.includes('what can you do')) {
+                return "I can help you analyze your farm data and provide advice on:\n\n- Financial performance and profits\n- Crop management and yields\n- Livestock health and value\n- Business growth strategies\n- Sales and market opportunities\n\nWhat specific area would you like help with?";
             }
 
-            // Default response - try to be helpful
-            return `I understand you're asking about "${message}". I specialize in providing farming business advice based on your actual data. \n\nYou can ask me about:\n- Your financial performance and how to improve profits\n- Which crops or livestock are most profitable\n- Strategies to grow your farm business\n- Sales and market opportunities\n\nWhat specific farming challenge can I help you with today?`;
+            // Default response
+            return "I understand you're asking about: " + message + "\n\nI specialize in farming business advice based on your data. You can ask me about profits, crops, livestock, or business growth. What specific farming question can I help you with?";
         }
 
         function generateFinancialAdvice(farmData) {
             const totalSales = farmData.sales.reduce((sum, sale) => sum + parseFloat(sale.amount), 0);
-            const totalCrops = farmData.crops.length;
-            const totalLivestock = farmData.livestock.reduce((sum, animal) => sum + parseInt(animal.quantity), 0);
             const inventoryValue = calculateInventoryValue(farmData);
             
-            let advice = `💰 **FINANCIAL ANALYSIS**\n\n`;
-            
-            // Basic assessment
             if (totalSales === 0) {
-                advice += `📊 Current Status: Starting Phase\n- No sales recorded yet\n- Inventory value: N$ ${inventoryValue.toFixed(2)}\n- ${totalCrops} crop types, ${totalLivestock} animals\n\n`;
-                advice += `💡 **RECOMMENDATIONS:**\n1. Start recording sales to track revenue\n2. Focus on selling your ${totalCrops > 0 ? 'crops' : 'livestock'}\n3. Build relationships with local buyers\n4. Consider diversifying your products`;
-            } else {
-                const monthlyAvg = totalSales / Math.max(farmData.sales.length, 1);
-                const topProduct = getTopSellingProduct(farmData);
-                
-                advice += `📊 Current Performance:\n- Total Revenue: N$ ${totalSales.toFixed(2)}\n- Average per sale: N$ ${monthlyAvg.toFixed(2)}\n- Inventory Value: N$ ${inventoryValue.toFixed(2)}\n- Best Product: ${topProduct}\n\n`;
-                
-                // Growth recommendations
-                advice += `💡 **PROFIT OPTIMIZATION:**\n`;
-                
-                if (monthlyAvg < 1000) {
-                    advice += `1. **Increase Sales Volume**: Focus on ${topProduct} - your best performer\n`;
-                }
-                
-                if (farmData.crops.length > 0) {
-                    advice += `2. **Crop Rotation**: Consider seasonal crops for continuous revenue\n`;
-                }
-                
-                if (farmData.livestock.length > 0) {
-                    advice += `3. **Livestock Breeding**: Expand your animal herds for long-term growth\n`;
-                }
-                
-                advice += `4. **Market Expansion**: Reach more buyers to increase sales frequency`;
+                return "Financial Status: Starting Phase\n\nYou haven't recorded sales yet. Your current inventory is worth N$ " + inventoryValue.toFixed(2) + ".\n\nTo start making profits:\n1. Begin selling your products\n2. Record all sales transactions\n3. Focus on your most valuable items first";
             }
+            
+            const monthlyAvg = totalSales / Math.max(farmData.sales.length, 1);
+            const topProduct = getTopSellingProduct(farmData);
+            
+            let advice = "Financial Analysis:\n\n";
+            advice += "Total Revenue: N$ " + totalSales.toFixed(2) + "\n";
+            advice += "Average Sale: N$ " + monthlyAvg.toFixed(2) + "\n";
+            advice += "Inventory Value: N$ " + inventoryValue.toFixed(2) + "\n";
+            advice += "Best Product: " + topProduct + "\n\n";
+            
+            advice += "To improve profits:\n";
+            
+            if (monthlyAvg < 1000) {
+                advice += "1. Focus on selling more " + topProduct + "\n";
+            }
+            
+            if (farmData.sales.length < 10) {
+                advice += "2. Increase your sales frequency\n";
+            }
+            
+            advice += "3. Consider expanding your buyer network\n";
+            advice += "4. Track which products bring highest returns";
             
             return advice;
         }
 
         function generateCropAdvice(farmData) {
             if (farmData.crops.length === 0) {
-                return `🌱 **CROP MANAGEMENT**\n\nYou haven't added any crops yet. Here's how to get started:\n\n1. **Start with staple crops**: Maize and Mahangu have reliable markets\n2. **Consider seasonal varieties**: Plant different crops for year-round income\n3. **Track yields**: Record quantities to identify best performers\n4. **Monitor growth stages**: Update crop status for better planning\n\nWould you like advice on which crops to start with?`;
+                return "You haven't added any crops yet.\n\nTo get started:\n1. Begin with staple crops like Maize or Mahangu\n2. Track planting and harvest dates\n3. Record quantities to monitor yields\n4. Update crop status as they grow";
             }
             
             const crops = farmData.crops;
             const readyCrops = crops.filter(c => c.status === 'ready').length;
             const growingCrops = crops.filter(c => c.status === 'growing').length;
-            const totalQuantity = crops.reduce((sum, crop) => sum + parseFloat(crop.quantity), 0);
             
-            let advice = `🌱 **CROP ANALYSIS**\n\n`;
-            advice += `📊 Current Status:\n- ${crops.length} crop types\n- ${readyCrops} ready for harvest\n- ${growingCrops} still growing\n- Total quantity: ${totalQuantity}kg\n\n`;
+            let advice = "Crop Analysis:\n\n";
+            advice += "You have " + crops.length + " crop types\n";
+            advice += readyCrops + " ready for harvest\n";
+            advice += growingCrops + " still growing\n\n";
             
-            // Identify best performing crops
-            const cropSales = analyzeCropSales(farmData);
-            advice += `🏆 **TOP PERFORMERS:**\n`;
-            
-            if (cropSales.length > 0) {
-                cropSales.slice(0, 3).forEach(crop => {
-                    advice += `- ${crop.name}: ${crop.sales} sales\n`;
-                });
-            } else {
-                advice += `- Track sales to identify best-performing crops\n`;
-            }
-            
-            advice += `\n💡 **OPTIMIZATION TIPS:**\n`;
+            advice += "Recommendations:\n";
             
             if (readyCrops > 0) {
-                advice += `1. **Harvest & Sell**: ${readyCrops} crops are ready for market\n`;
+                advice += "1. Harvest and sell your ready crops\n";
             }
             
             if (growingCrops > 0) {
-                advice += `2. **Monitor Growth**: ${growingCrops} crops need care until harvest\n`;
+                advice += "2. Continue caring for growing crops\n";
             }
             
             if (crops.length < 3) {
-                advice += `3. **Diversify**: Add more crop types for risk management\n`;
+                advice += "3. Consider adding more crop types\n";
             }
             
-            advice += `4. **Record Sales**: Track which crops bring highest returns`;
+            advice += "4. Track which crops sell best";
             
             return advice;
         }
 
         function generateLivestockAdvice(farmData) {
             if (farmData.livestock.length === 0) {
-                return `🐄 **LIVESTOCK MANAGEMENT**\n\nNo livestock recorded yet. Here's how to start:\n\n1. **Begin with small animals**: Goats or chickens require less space\n2. **Consider local demand**: Focus on animals with good market prices\n3. **Health monitoring**: Track animal health from the start\n4. **Breeding planning**: Plan for herd growth over time\n\nNeed specific advice on which animals to start with?`;
+                return "No livestock recorded yet.\n\nTo start with livestock:\n1. Begin with small animals like goats or chickens\n2. Track animal health regularly\n3. Record acquisition dates and quantities\n4. Plan for herd growth over time";
             }
             
             const livestock = farmData.livestock;
             const totalAnimals = livestock.reduce((sum, animal) => sum + parseInt(animal.quantity), 0);
             const healthyAnimals = livestock.filter(a => a.healthStatus === 'healthy').length;
-            const animalTypes = livestock.length;
             
-            let advice = `🐄 **LIVESTOCK ANALYSIS**\n\n`;
-            advice += `📊 Current Status:\n- ${totalAnimals} total animals\n- ${animalTypes} different types\n- ${healthyAnimals}/${animalTypes} healthy herds\n\n`;
+            let advice = "Livestock Analysis:\n\n";
+            advice += "Total animals: " + totalAnimals + "\n";
+            advice += "Healthy herds: " + healthyAnimals + " out of " + livestock.length + "\n\n";
             
-            advice += `🏆 **YOUR HERD:**\n`;
+            advice += "Your animals:\n";
             livestock.forEach(animal => {
-                advice += `- ${animal.quantity} ${animal.type} (${animal.breed || 'mixed'}) - ${animal.healthStatus}\n`;
+                advice += "- " + animal.quantity + " " + animal.type + " (" + animal.healthStatus + ")\n";
             });
             
-            advice += `\n💡 **GROWTH STRATEGIES:**\n`;
+            advice += "\nTo increase value:\n";
             
-            if (healthyAnimals === animalTypes) {
-                advice += `1. **Excellent Health**: All herds are healthy - perfect for expansion\n`;
+            if (healthyAnimals === livestock.length) {
+                advice += "1. Your herds are healthy - good for expansion\n";
             } else {
-                advice += `1. **Health Priority**: Address health issues in ${animalTypes - healthyAnimals} herd(s)\n`;
+                advice += "1. Address health issues first\n";
             }
             
             if (totalAnimals < 50) {
-                advice += `2. **Herd Expansion**: Consider breeding to increase animal count\n`;
+                advice += "2. Consider breeding to grow your herds\n";
             }
             
-            advice += `3. **Value Addition**: Explore products like milk, meat, or breeding stock\n`;
-            advice += `4. **Market Research**: Identify best buyers for each animal type`;
+            advice += "3. Explore different markets for your animals\n";
+            advice += "4. Maintain good health records";
             
             return advice;
         }
 
         function generateGrowthStrategy(farmData) {
             const totalSales = farmData.sales.reduce((sum, sale) => sum + parseFloat(sale.amount), 0);
-            const cropCount = farmData.crops.length;
-            const livestockCount = farmData.livestock.reduce((sum, animal) => sum + parseInt(animal.quantity), 0);
             
-            let advice = `📈 **BUSINESS GROWTH STRATEGY**\n\n`;
+            let advice = "Business Growth Strategy:\n\n";
             
-            // Assess current position
             if (totalSales === 0) {
-                advice += `🎯 **CURRENT STAGE**: Foundation Building\n\n`;
-                advice += `🚀 **IMMEDIATE FOCUS:**\n1. **Sales Generation**: Start recording your first sales\n2. **Market Entry**: Identify local buyers and markets\n3. **Product Validation**: Test which products sell best\n4. **Basic Tracking**: Continue using FarmTracker for data\n`;
+                advice += "Current Stage: Foundation Building\n\nFocus on:\n1. Recording your first sales\n2. Building customer relationships\n3. Testing different products\n4. Establishing basic operations";
             } else if (totalSales < 5000) {
-                advice += `🎯 **CURRENT STAGE**: Early Growth\n\n`;
-                advice += `🚀 **SCALING STRATEGY:**\n1. **Product Focus**: Double down on your best-selling items\n2. **Customer Relationships**: Build repeat business with current buyers\n3. **Efficiency Improvement**: Optimize your farming processes\n4. **Modest Expansion**: Consider small increases in production\n`;
+                advice += "Current Stage: Early Growth\n\nFocus on:\n1. Scaling your best products\n2. Building repeat customers\n3. Improving efficiency\n4. Moderate expansion";
             } else {
-                advice += `🎯 **CURRENT STAGE**: Established Business\n\n`;
-                advice += `🚀 **EXPANSION STRATEGY:**\n1. **Diversification**: Add complementary products/services\n2. **Market Expansion**: Reach new geographic areas\n3. **Value Addition**: Process raw products for higher margins\n4. **Technology Adoption**: Implement more advanced farming techniques\n`;
+                advice += "Current Stage: Established Business\n\nFocus on:\n1. Product diversification\n2. New market opportunities\n3. Value-added products\n4. Advanced farming methods";
             }
-            
-            advice += `\n📊 **BASED ON YOUR DATA:**\n- ${cropCount} crop types | ${livestockCount} animals | N$ ${totalSales.toFixed(2)} revenue\n\n`;
-            advice += `💡 **QUICK WINS:**\n${getQuickWins(farmData)}`;
             
             return advice;
         }
@@ -563,30 +533,28 @@
         function generateSalesAdvice(farmData) {
             const sales = farmData.sales;
             if (sales.length === 0) {
-                return `💼 **SALES STRATEGY**\n\nNo sales recorded yet. Here's how to start selling:\n\n1. **Local Markets**: Start with farmers markets or local stores\n2. **Direct Sales**: Sell to neighbors and community members\n3. **Bulk Buyers**: Approach restaurants or grocery stores\n4. **Online Platforms**: Consider social media for local sales\n\nRemember to record every sale in FarmTracker to build your sales history!`;
+                return "No sales recorded yet.\n\nTo start selling:\n1. Begin with local markets\n2. Sell to neighbors and community\n3. Approach local stores\n4. Record every sale for tracking";
             }
             
             const totalSales = sales.reduce((sum, sale) => sum + parseFloat(sale.amount), 0);
             const topBuyer = getTopBuyer(farmData);
             const bestProduct = getTopSellingProduct(farmData);
             
-            let advice = `💼 **SALES PERFORMANCE ANALYSIS**\n\n`;
-            advice += `📊 Current Metrics:\n- Total Sales: N$ ${totalSales.toFixed(2)}\n- Number of Transactions: ${sales.length}\n- Best Customer: ${topBuyer}\n- Top Product: ${bestProduct}\n\n`;
+            let advice = "Sales Performance:\n\n";
+            advice += "Total Sales: N$ " + totalSales.toFixed(2) + "\n";
+            advice += "Transactions: " + sales.length + "\n";
+            advice += "Best Customer: " + topBuyer + "\n";
+            advice += "Top Product: " + bestProduct + "\n\n";
             
-            advice += `🎯 **SALES OPTIMIZATION:**\n`;
-            advice += `1. **Customer Retention**: Focus on ${topBuyer} - your best customer\n`;
-            advice += `2. **Product Focus**: Promote ${bestProduct} - your top performer\n`;
+            advice += "To improve sales:\n";
+            advice += "1. Focus on your best customer: " + topBuyer + "\n";
+            advice += "2. Promote your top product: " + bestProduct + "\n";
             
             if (sales.length < 10) {
-                advice += `3. **Sales Frequency**: Increase number of transactions\n`;
+                advice += "3. Increase sales frequency\n";
             }
             
-            const avgSale = totalSales / sales.length;
-            if (avgSale < 500) {
-                advice += `4. **Average Order Value**: Bundle products to increase sale size\n`;
-            }
-            
-            advice += `5. **New Customers**: Expand your buyer network for growth`;
+            advice += "4. Expand your buyer network";
             
             return advice;
         }
@@ -597,25 +565,20 @@
             const livestockCount = farmData.livestock.reduce((sum, animal) => sum + parseInt(animal.quantity), 0);
             const inventoryValue = calculateInventoryValue(farmData);
             
-            let overview = `🏆 **FARM PERFORMANCE OVERVIEW**\n\n`;
-            overview += `📈 **KEY METRICS:**\n`;
-            overview += `• Total Revenue: N$ ${totalSales.toFixed(2)}\n`;
-            overview += `• Active Crops: ${cropCount} types\n`;
-            overview += `• Livestock: ${livestockCount} animals\n`;
-            overview += `• Inventory Value: N$ ${inventoryValue.toFixed(2)}\n`;
-            overview += `• Sales Transactions: ${farmData.sales.length}\n\n`;
+            let overview = "Farm Performance Overview:\n\n";
+            overview += "Total Revenue: N$ " + totalSales.toFixed(2) + "\n";
+            overview += "Active Crops: " + cropCount + " types\n";
+            overview += "Livestock: " + livestockCount + " animals\n";
+            overview += "Inventory Value: N$ " + inventoryValue.toFixed(2) + "\n";
+            overview += "Sales Transactions: " + farmData.sales.length + "\n\n";
             
-            // Performance assessment
             if (totalSales === 0) {
-                overview += `🎯 **STATUS**: Ready for First Sales\n💡 **NEXT STEP**: Record your first sale and start building revenue!`;
+                overview += "Status: Ready for First Sales\nNext Step: Record your first sale to start tracking revenue";
             } else if (totalSales < 3000) {
-                overview += `🎯 **STATUS**: Growing Steadily\n💡 **NEXT STEP**: Focus on increasing sales frequency and average order value`;
+                overview += "Status: Growing Steadily\nNext Step: Focus on increasing sales frequency";
             } else {
-                overview += `🎯 **STATUS**: Well Established\n💡 **NEXT STEP**: Explore expansion opportunities and new markets`;
+                overview += "Status: Well Established\nNext Step: Explore expansion opportunities";
             }
-            
-            overview += `\n\n🌟 **STRENGTHS:**\n${identifyStrengths(farmData)}`;
-            overview += `\n🔧 **AREAS FOR IMPROVEMENT:**\n${identifyImprovements(farmData)}`;
             
             return overview;
         }
@@ -641,59 +604,6 @@
                 productSales[sale.itemName] = (productSales[sale.itemName] || 0) + parseFloat(sale.amount);
             });
             return Object.keys(productSales).reduce((a, b) => productSales[a] > productSales[b] ? a : b, 'No products sold yet');
-        }
-
-        function analyzeCropSales(farmData) {
-            const cropSales = [];
-            farmData.crops.forEach(crop => {
-                const sales = farmData.sales.filter(sale => sale.itemName === crop.name).length;
-                cropSales.push({ name: crop.name, sales: sales });
-            });
-            return cropSales.sort((a, b) => b.sales - a.sales);
-        }
-
-        function getQuickWins(farmData) {
-            const quickWins = [];
-            
-            if (farmData.crops.filter(c => c.status === 'ready').length > 0) {
-                quickWins.push('• Harvest and sell ready crops immediately');
-            }
-            
-            if (farmData.sales.length === 0) {
-                quickWins.push('• Record your first sale to start revenue tracking');
-            }
-            
-            if (farmData.livestock.filter(a => a.healthStatus !== 'healthy').length > 0) {
-                quickWins.push('• Address livestock health issues to maintain value');
-            }
-            
-            if (farmData.crops.length < 2) {
-                quickWins.push('• Add one more crop type for diversification');
-            }
-            
-            return quickWins.length > 0 ? quickWins.join('\n') : '• Continue current successful practices';
-        }
-
-        function identifyStrengths(farmData) {
-            const strengths = [];
-            
-            if (farmData.crops.length > 0) strengths.push('• Multiple crop types for diversity');
-            if (farmData.livestock.length > 0) strengths.push('• Livestock assets for long-term value');
-            if (farmData.sales.length > 5) strengths.push('• Established sales history');
-            if (calculateInventoryValue(farmData) > 1000) strengths.push('• Significant inventory value');
-            
-            return strengths.length > 0 ? strengths.join('\n') : '• Using FarmTracker for better management';
-        }
-
-        function identifyImprovements(farmData) {
-            const improvements = [];
-            
-            if (farmData.sales.length === 0) improvements.push('• Start recording sales transactions');
-            if (farmData.crops.length === 0) improvements.push('• Consider adding crop cultivation');
-            if (farmData.livestock.length === 0) improvements.push('• Explore livestock opportunities');
-            if (farmData.sales.length > 0 && farmData.sales.length < 10) improvements.push('• Increase sales frequency');
-            
-            return improvements.length > 0 ? improvements.join('\n') : '• Continue optimizing current operations';
         }
 
         // Report View and Download Functions
@@ -734,11 +644,11 @@
 
         // Utility functions for showing messages
         function showSuccess(message) {
-            alert('✅ ' + message);
+            alert('Success: ' + message);
         }
 
         function showError(message) {
-            alert('❌ ' + message);
+            alert('Error: ' + message);
         }
     </script>
 </body>
