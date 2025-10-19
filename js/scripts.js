@@ -18,6 +18,9 @@ function initializeApp() {
     // Check if user is logged in and redirect if needed
     checkAuthentication();
     
+    // Initialize mobile menu
+    initMobileMenu();
+    
     // Dashboard initialization
     if (document.getElementById('totalCrops')) {
         updateDashboard();
@@ -46,6 +49,40 @@ function initializeApp() {
     
     // Forms initialization
     initializeForms();
+}
+
+// Mobile Menu Toggle
+function initMobileMenu() {
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+    
+    if (menuToggle && navMenu) {
+        menuToggle.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+            // Change menu icon
+            if (navMenu.classList.contains('active')) {
+                menuToggle.textContent = '✕';
+            } else {
+                menuToggle.textContent = '☰';
+            }
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.nav-container') && navMenu.classList.contains('active')) {
+                navMenu.classList.remove('active');
+                menuToggle.textContent = '☰';
+            }
+        });
+
+        // Close menu when clicking on a link
+        navMenu.addEventListener('click', (e) => {
+            if (e.target.classList.contains('nav-link')) {
+                navMenu.classList.remove('active');
+                menuToggle.textContent = '☰';
+            }
+        });
+    }
 }
 
 // Authentication functions
@@ -148,7 +185,7 @@ function handleRegister(e) {
         farmName: farmName,
         location: location,
         email: email,
-        password: password, // In real app, this should be hashed
+        password: password,
         createdAt: new Date().toISOString()
     };
     
@@ -191,11 +228,15 @@ function showError(message) {
         border-radius: 4px;
         margin: 15px 0;
         border: 1px solid #f5c6cb;
+        text-align: center;
     `;
     
     // Insert after the form title or at the top of the form
+    const formContainer = document.querySelector('.form-container');
     const form = document.querySelector('form');
-    form.parentNode.insertBefore(errorDiv, form);
+    if (formContainer && form) {
+        formContainer.insertBefore(errorDiv, form);
+    }
     
     // Auto remove after 5 seconds
     setTimeout(() => {
@@ -223,11 +264,15 @@ function showSuccess(message) {
         border-radius: 4px;
         margin: 15px 0;
         border: 1px solid #c3e6cb;
+        text-align: center;
     `;
     
     // Insert after the form title or at the top of the form
+    const formContainer = document.querySelector('.form-container');
     const form = document.querySelector('form');
-    form.parentNode.insertBefore(successDiv, form);
+    if (formContainer && form) {
+        formContainer.insertBefore(successDiv, form);
+    }
     
     // Auto remove after 5 seconds
     setTimeout(() => {
@@ -895,114 +940,160 @@ function updateItemNames() {
 
 // Reports Page Functions
 function generateSalesReport() {
-    // Create a simple report
     const totalSales = farmData.sales.reduce((sum, sale) => sum + parseFloat(sale.amount), 0);
-    const totalCrops = farmData.crops.length;
-    const totalLivestock = farmData.livestock.reduce((sum, animal) => sum + parseInt(animal.quantity), 0);
+    const currentMonth = new Date().getMonth();
+    const monthlySales = farmData.sales
+        .filter(sale => new Date(sale.date).getMonth() === currentMonth)
+        .reduce((sum, sale) => sum + parseFloat(sale.amount), 0);
     
     const reportContent = `
-        FARM PRODUCE TRACKER - SALES REPORT
-        Generated on: ${new Date().toLocaleDateString()}
-        
-        SUMMARY:
-        - Total Sales: N$ ${totalSales.toFixed(2)}
-        - Active Crops: ${totalCrops}
-        - Total Livestock: ${totalLivestock}
-        - Monthly Revenue: N$ ${farmData.sales
-            .filter(sale => new Date(sale.date).getMonth() === new Date().getMonth())
-            .reduce((sum, sale) => sum + parseFloat(sale.amount), 0).toFixed(2)}
-        
-        RECENT SALES:
-        ${farmData.sales.slice(-5).map(sale => 
-            `- ${sale.itemName}: ${sale.quantity} sold for N$ ${sale.amount} to ${sale.buyer}`
-        ).join('\n')}
+╔══════════════════════════════════════════════════╗
+║             FARM PRODUCE TRACKER                 ║
+║               SALES PERFORMANCE REPORT           ║
+╠══════════════════════════════════════════════════╣
+║                                                  ║
+║  📅 Report Generated: ${new Date().toLocaleDateString()}              ║
+║  👨‍🌾 Farmer: ${JSON.parse(localStorage.getItem('currentUser'))?.farmName || 'Your Farm'}                    ║
+║                                                  ║
+╠══════════════════════════════════════════════════╣
+║                 📊 FINANCIAL SUMMARY             ║
+╠══════════════════════════════════════════════════╣
+║                                                  ║
+║  💰 Total Revenue:       N$ ${totalSales.toFixed(2).padEnd(10)}       ║
+║  📈 This Month:          N$ ${monthlySales.toFixed(2).padEnd(10)}       ║
+║  🔄 Total Transactions:  ${farmData.sales.length.toString().padEnd(10)}       ║
+║                                                  ║
+╠══════════════════════════════════════════════════╣
+║                 🏆 TOP PERFORMERS                ║
+╠══════════════════════════════════════════════════╣
+║                                                  ║
+${getTopProducts().slice(0, 3).map((product, index) => 
+`║  ${index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'} ${product.name.padEnd(15)} N$ ${product.amount.toFixed(2).padEnd(8)} ║`
+).join('\n')}
+║                                                  ║
+╠══════════════════════════════════════════════════╣
+║                 🤝 BUYER NETWORK                 ║
+╠══════════════════════════════════════════════════╣
+║                                                  ║
+${getTopBuyers().slice(0, 3).map(buyer => 
+`║  👤 ${buyer.name.padEnd(20)} ${buyer.count} purchases  ║`
+).join('\n')}
+║                                                  ║
+╠══════════════════════════════════════════════════╣
+║                 💡 RECOMMENDATIONS               ║
+╠══════════════════════════════════════════════════╣
+║                                                  ║
+${getSalesRecommendations().map(rec => 
+`║  ✅ ${rec.padEnd(40)} ║`
+).join('\n')}
+║                                                  ║
+╚══════════════════════════════════════════════════╝
+
+"Your success grows from the seeds you plant today 🌱"
     `;
     
-    // In a real app, this would generate a PDF or download a file
-    // For now, we'll show it in an alert and create a downloadable text file
-    const blob = new Blob([reportContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `sales-report-${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    addActivity('report_generated', 'Generated sales trends report');
-    showSuccess('Sales report generated and downloaded!');
+    downloadReportFile(reportContent, 'sales-performance-report.txt');
+    addActivity('report_generated', 'Generated sales performance report');
+    showSuccess('Sales report downloaded successfully! 📊');
 }
 
 function generateCropReport() {
-    const cropReport = `
-        FARM PRODUCE TRACKER - CROP ANALYTICS REPORT
-        Generated on: ${new Date().toLocaleDateString()}
-        
-        CROP SUMMARY:
-        Total Crops: ${farmData.crops.length}
-        
-        CROP DETAILS:
-        ${farmData.crops.map(crop => 
-            `- ${crop.name} (${crop.type}): ${crop.quantity}kg, Status: ${crop.status}, Planted: ${formatDate(crop.plantingDate)}`
-        ).join('\n')}
-        
-        STATUS BREAKDOWN:
-        - Planted: ${farmData.crops.filter(c => c.status === 'planted').length}
-        - Growing: ${farmData.crops.filter(c => c.status === 'growing').length}
-        - Ready: ${farmData.crops.filter(c => c.status === 'ready').length}
-        - Harvested: ${farmData.crops.filter(c => c.status === 'harvested').length}
+    const totalCrops = farmData.crops.length;
+    const readyCrops = farmData.crops.filter(c => c.status === 'ready').length;
+    const growingCrops = farmData.crops.filter(c => c.status === 'growing').length;
+    const totalQuantity = farmData.crops.reduce((sum, crop) => sum + parseFloat(crop.quantity), 0);
+    
+    const reportContent = `
+╔══════════════════════════════════════════════════╗
+║             FARM PRODUCE TRACKER                 ║
+║               CROP ANALYTICS REPORT              ║
+╠══════════════════════════════════════════════════╣
+║                                                  ║
+║  📅 Report Generated: ${new Date().toLocaleDateString()}              ║
+║  👨‍🌾 Farmer: ${JSON.parse(localStorage.getItem('currentUser'))?.farmName || 'Your Farm'}                    ║
+║  🌱 Total Crop Types: ${totalCrops}                            ║
+║                                                  ║
+╠══════════════════════════════════════════════════╣
+║                 📈 CROP OVERVIEW                 ║
+╠══════════════════════════════════════════════════╣
+║                                                  ║
+║  📊 Total Quantity:    ${totalQuantity} kg                  ║
+║  ✅ Ready to Harvest:  ${readyCrops} crops                 ║
+║  🌿 Still Growing:     ${growingCrops} crops                 ║
+║                                                  ║
+╠══════════════════════════════════════════════════╣
+║                 🌾 CROP BREAKDOWN                ║
+╠══════════════════════════════════════════════════╣
+║                                                  ║
+${farmData.crops.map(crop => 
+`║  ${getCropEmoji(crop.type)} ${crop.name.padEnd(12)} ${crop.quantity}kg ${crop.status.padEnd(12)} ║`
+).join('\n')}
+║                                                  ║
+╠══════════════════════════════════════════════════╣
+║                 🎯 ACTION PLAN                   ║
+╠══════════════════════════════════════════════════╣
+║                                                  ║
+${getCropRecommendations().map(rec => 
+`║  🌟 ${rec.padEnd(40)} ║`
+).join('\n')}
+║                                                  ║
+╚══════════════════════════════════════════════════╝
+
+"Every harvest begins with a single seed planted with care 🌻"
     `;
     
-    const blob = new Blob([cropReport], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `crop-report-${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
+    downloadReportFile(reportContent, 'crop-analytics-report.txt');
     addActivity('report_generated', 'Generated crop analytics report');
-    showSuccess('Crop analytics report generated and downloaded!');
+    showSuccess('Crop report downloaded successfully! 🌾');
 }
 
 function generateLivestockReport() {
     const totalAnimals = farmData.livestock.reduce((sum, animal) => sum + parseInt(animal.quantity), 0);
+    const healthyAnimals = farmData.livestock.filter(a => a.healthStatus === 'healthy').length;
+    const totalTypes = farmData.livestock.length;
     
-    const livestockReport = `
-        FARM PRODUCE TRACKER - LIVESTOCK REPORT
-        Generated on: ${new Date().toLocaleDateString()}
-        
-        LIVESTOCK SUMMARY:
-        Total Animals: ${totalAnimals}
-        Animal Types: ${farmData.livestock.length}
-        
-        ANIMAL DETAILS:
-        ${farmData.livestock.map(animal => 
-            `- ${animal.type} (${animal.breed || 'Unknown breed'}): ${animal.quantity} animals, Health: ${animal.healthStatus}`
-        ).join('\n')}
-        
-        HEALTH STATUS:
-        - Healthy: ${farmData.livestock.filter(a => a.healthStatus === 'healthy').length} types
-        - Vaccinated: ${farmData.livestock.filter(a => a.healthStatus === 'vaccinated').length} types
-        - Sick: ${farmData.livestock.filter(a => a.healthStatus === 'sick').length} types
-        - Quarantined: ${farmData.livestock.filter(a => a.healthStatus === 'quarantined').length} types
+    const reportContent = `
+╔══════════════════════════════════════════════════╗
+║             FARM PRODUCE TRACKER                 ║
+║              LIVESTOCK HEALTH REPORT             ║
+╠══════════════════════════════════════════════════╣
+║                                                  ║
+║  📅 Report Generated: ${new Date().toLocaleDateString()}              ║
+║  👨‍🌾 Farmer: ${JSON.parse(localStorage.getItem('currentUser'))?.farmName || 'Your Farm'}                    ║
+║  🐄 Total Animals: ${totalAnimals}                          ║
+║                                                  ║
+╠══════════════════════════════════════════════════╣
+║                 🏥 HEALTH SUMMARY                ║
+╠══════════════════════════════════════════════════╣
+║                                                  ║
+║  💚 Healthy Herds: ${healthyAnimals}/${totalTypes}                    ║
+║  📊 Animal Types:  ${totalTypes}                          ║
+║  🎯 Health Score:  ${Math.round((healthyAnimals/totalTypes)*100)}%                    ║
+║                                                  ║
+╠══════════════════════════════════════════════════╣
+║                 🐮 HERD BREAKDOWN                ║
+╠══════════════════════════════════════════════════╣
+║                                                  ║
+${farmData.livestock.map(animal => 
+`║  ${getAnimalEmoji(animal.type)} ${animal.type.padEnd(10)} ${animal.quantity.toString().padEnd(3)} ${animal.healthStatus.padEnd(12)} ║`
+).join('\n')}
+║                                                  ║
+╠══════════════════════════════════════════════════╣
+║                 💪 HEALTH TIPS                   ║
+╠══════════════════════════════════════════════════╣
+║                                                  ║
+${getLivestockRecommendations().map(rec => 
+`║  💡 ${rec.padEnd(40)} ║`
+).join('\n')}
+║                                                  ║
+╚══════════════════════════════════════════════════╝
+
+"Healthy animals are the heartbeat of a thriving farm ❤️"
     `;
     
-    const blob = new Blob([livestockReport], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `livestock-report-${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
+    downloadReportFile(reportContent, 'livestock-health-report.txt');
     addActivity('report_generated', 'Generated livestock health report');
-    showSuccess('Livestock report generated and downloaded!');
+    showSuccess('Livestock report downloaded successfully! 🐄');
 }
 
 function generateFinancialReport() {
@@ -1010,49 +1101,187 @@ function generateFinancialReport() {
     const currentMonthSales = farmData.sales
         .filter(sale => new Date(sale.date).getMonth() === new Date().getMonth())
         .reduce((sum, sale) => sum + parseFloat(sale.amount), 0);
-    const pendingPayments = farmData.sales
-        .filter(sale => sale.paymentStatus === 'pending')
-        .reduce((sum, sale) => sum + parseFloat(sale.amount), 0);
+    const inventoryValue = calculateInventoryValue();
     
-    const financialReport = `
-        FARM PRODUCE TRACKER - FINANCIAL SUMMARY
-        Generated on: ${new Date().toLocaleDateString()}
-        
-        FINANCIAL OVERVIEW:
-        - Total Revenue: N$ ${totalSales.toFixed(2)}
-        - This Month: N$ ${currentMonthSales.toFixed(2)}
-        - Pending Payments: N$ ${pendingPayments.toFixed(2)}
-        
-        INVENTORY VALUE:
-        - Crop Inventory: N$ ${farmData.crops.reduce((sum, crop) => sum + (parseFloat(crop.quantity) * 10), 0).toFixed(2)}
-        - Livestock Inventory: N$ ${farmData.livestock.reduce((sum, animal) => sum + (parseInt(animal.quantity) * 100), 0).toFixed(2)}
-        - Total Inventory Value: N$ ${(farmData.crops.reduce((sum, crop) => sum + (parseFloat(crop.quantity) * 10), 0) + farmData.livestock.reduce((sum, animal) => sum + (parseInt(animal.quantity) * 100), 0)).toFixed(2)}
-        
-        TOP BUYERS:
-        ${Object.entries(
-            farmData.sales.reduce((acc, sale) => {
-                acc[sale.buyer] = (acc[sale.buyer] || 0) + parseFloat(sale.amount);
-                return acc;
-            }, {})
-        )
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-        .map(([buyer, amount]) => `- ${buyer}: N$ ${amount.toFixed(2)}`)
-        .join('\n')}
+    const reportContent = `
+╔══════════════════════════════════════════════════╗
+║             FARM PRODUCE TRACKER                 ║
+║              FINANCIAL SUMMARY REPORT            ║
+╠══════════════════════════════════════════════════╣
+║                                                  ║
+║  📅 Report Generated: ${new Date().toLocaleDateString()}              ║
+║  👨‍🌾 Farmer: ${JSON.parse(localStorage.getItem('currentUser'))?.farmName || 'Your Farm'}                    ║
+║  💼 Business Health: ${getBusinessHealth(totalSales)}                ║
+║                                                  ║
+╠══════════════════════════════════════════════════╣
+║                 💰 REVENUE ANALYSIS              ║
+╠══════════════════════════════════════════════════╣
+║                                                  ║
+║  🏦 Total Revenue:      N$ ${totalSales.toFixed(2).padEnd(10)}       ║
+║  📈 Monthly Average:    N$ ${(totalSales/Math.max(farmData.sales.length,1)).toFixed(2).padEnd(10)}       ║
+║  🌟 This Month:         N$ ${currentMonthSales.toFixed(2).padEnd(10)}       ║
+║                                                  ║
+╠══════════════════════════════════════════════════╣
+║                 📦 ASSETS OVERVIEW               ║
+╠══════════════════════════════════════════════════╣
+║                                                  ║
+║  🌱 Crop Value:         N$ ${(farmData.crops.reduce((sum, crop) => sum + (parseFloat(crop.quantity) * 10), 0)).toFixed(2).padEnd(10)}       ║
+║  🐄 Livestock Value:    N$ ${(farmData.livestock.reduce((sum, animal) => sum + (parseInt(animal.quantity) * 100), 0)).toFixed(2).padEnd(10)}       ║
+║  💎 Total Assets:       N$ ${inventoryValue.toFixed(2).padEnd(10)}       ║
+║                                                  ║
+╠══════════════════════════════════════════════════╣
+║                 🎯 GROWTH STRATEGY               ║
+╠══════════════════════════════════════════════════╣
+║                                                  ║
+${getFinancialRecommendations(totalSales).map(rec => 
+`║  💎 ${rec.padEnd(40)} ║`
+).join('\n')}
+║                                                  ║
+╚══════════════════════════════════════════════════╝
+
+"Your farm's financial growth is cultivated one wise decision at a time 💰"
     `;
     
-    const blob = new Blob([financialReport], { type: 'text/plain' });
+    downloadReportFile(reportContent, 'financial-summary-report.txt');
+    addActivity('report_generated', 'Generated financial summary report');
+    showSuccess('Financial report downloaded successfully! 💵');
+}
+
+// Helper functions for reports
+function getTopProducts() {
+    const productSales = {};
+    farmData.sales.forEach(sale => {
+        productSales[sale.itemName] = (productSales[sale.itemName] || 0) + parseFloat(sale.amount);
+    });
+    
+    return Object.entries(productSales)
+        .map(([name, amount]) => ({ name, amount }))
+        .sort((a, b) => b.amount - a.amount);
+}
+
+function getTopBuyers() {
+    const buyerCounts = {};
+    farmData.sales.forEach(sale => {
+        buyerCounts[sale.buyer] = (buyerCounts[sale.buyer] || 0) + 1;
+    });
+    
+    return Object.entries(buyerCounts)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count);
+}
+
+function getSalesRecommendations() {
+    const recommendations = [];
+    const totalSales = farmData.sales.reduce((sum, sale) => sum + parseFloat(sale.amount), 0);
+    
+    if (totalSales === 0) {
+        return ['Start recording your first sales transactions', 'Focus on building customer relationships', 'Set achievable monthly revenue targets'];
+    }
+    
+    if (farmData.sales.length < 5) {
+        recommendations.push('Increase sales frequency with current buyers');
+    }
+    
+    const topProduct = getTopProducts()[0];
+    if (topProduct) {
+        recommendations.push(`Focus on ${topProduct.name} - your best performer`);
+    }
+    
+    recommendations.push('Explore new markets for your products');
+    recommendations.push('Consider seasonal pricing strategies');
+    
+    return recommendations.slice(0, 3);
+}
+
+function getCropEmoji(type) {
+    const emojis = {
+        'grain': '🌾',
+        'vegetable': '🥦',
+        'fruit': '🍎',
+        'legume': '🥜'
+    };
+    return emojis[type] || '🌱';
+}
+
+function getCropRecommendations() {
+    const recommendations = [];
+    const readyCrops = farmData.crops.filter(c => c.status === 'ready');
+    
+    if (readyCrops.length > 0) {
+        recommendations.push(`Harvest and sell ${readyCrops.length} ready crops`);
+    }
+    
+    if (farmData.crops.length < 3) {
+        recommendations.push('Diversify with additional crop types');
+    }
+    
+    recommendations.push('Monitor soil health and crop rotation');
+    recommendations.push('Plan planting schedule for continuous harvest');
+    
+    return recommendations.slice(0, 3);
+}
+
+function getAnimalEmoji(type) {
+    const emojis = {
+        'Cattle': '🐄',
+        'Goats': '🐐',
+        'Sheep': '🐑',
+        'Chickens': '🐔',
+        'Pigs': '🐖'
+    };
+    return emojis[type] || '🐾';
+}
+
+function getLivestockRecommendations() {
+    const recommendations = [];
+    const unhealthy = farmData.livestock.filter(a => a.healthStatus !== 'healthy');
+    
+    if (unhealthy.length > 0) {
+        recommendations.push(`Address health issues in ${unhealthy.length} herds`);
+    }
+    
+    recommendations.push('Maintain regular vaccination schedule');
+    recommendations.push('Monitor feeding and nutrition programs');
+    recommendations.push('Plan breeding for herd growth');
+    
+    return recommendations.slice(0, 3);
+}
+
+function getBusinessHealth(totalSales) {
+    if (totalSales === 0) return 'Starting Up 🌱';
+    if (totalSales < 5000) return 'Growing Steadily 📈';
+    if (totalSales < 20000) return 'Thriving Business 💰';
+    return 'Highly Successful 🏆';
+}
+
+function getFinancialRecommendations(totalSales) {
+    const recommendations = [];
+    
+    if (totalSales === 0) {
+        return ['Begin recording all farm transactions', 'Set up basic accounting system', 'Track expenses and revenue separately'];
+    }
+    
+    if (totalSales < 10000) {
+        recommendations.push('Focus on increasing profit margins');
+    }
+    
+    recommendations.push('Reinvest profits into farm expansion');
+    recommendations.push('Build emergency fund for seasonal changes');
+    recommendations.push('Explore value-added product opportunities');
+    
+    return recommendations.slice(0, 3);
+}
+
+function downloadReportFile(content, filename) {
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `financial-report-${new Date().toISOString().split('T')[0]}.txt`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
-    addActivity('report_generated', 'Generated financial summary report');
-    showSuccess('Financial summary generated and downloaded!');
 }
 
 // Update reports page statistics
@@ -1140,6 +1369,12 @@ function addActivity(type, details) {
     
     farmData.activities.push(activity);
     saveToLocalStorage('activities', farmData.activities);
+}
+
+function calculateInventoryValue() {
+    const cropValue = farmData.crops.reduce((sum, crop) => sum + (parseFloat(crop.quantity) * 10), 0);
+    const livestockValue = farmData.livestock.reduce((sum, animal) => sum + (parseInt(animal.quantity) * 100), 0);
+    return cropValue + livestockValue;
 }
 
 // Add some sample data for demonstration (without system messages)
